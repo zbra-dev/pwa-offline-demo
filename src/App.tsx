@@ -1,24 +1,24 @@
 import React from 'react';
-import logo from './logo.svg';
+import Firebase from 'firebase';
+import { firebaseConfig } from './firebase.config';
 import './App.css';
+import { Button } from 'semantic-ui-react';
+
 
 const App: React.FC = () => {
+
+  Firebase.initializeApp(firebaseConfig);
+
+
+  const db = Firebase.firestore();
+
+  const items = db.collection('items').get().then((value) => {
+    console.log(value.docs.map(doc => doc.data()));
+  });
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Button content="Button" />
     </div>
   );
 }
