@@ -1,30 +1,43 @@
 import Firebase from 'firebase';
 import { firebaseConfig } from './firebase.config';
+import { TodoItem } from './models';
 
 export default class ItemsRepository {
-    private collection: Firebase.firestore.CollectionReference;
+    private collection: Firebase.database.Reference;
+    private database: Firebase.database.Database;
+
     constructor() {
         Firebase.initializeApp(firebaseConfig);
-        this.collection = Firebase.firestore().collection('items');
+        this.database = Firebase.database();
+        this.collection = this.database.ref('items');
     }
 
-    list(): any[] {
-        const items: any[] = [];
-        this.collection.get().then((value) => {
-            value.docs.map(doc => items.push(doc.data()));
+    subscribe(callback: (snapshot: TodoItem[]) => any) {
+        this.collection.on('value', (state) => {
+            const val = state.val();
+            callback(val ? Object.values(val) : []);
+            this.persistState(state);
         });
-        return items;
     }
 
-    add(item: any): Promise<Firebase.firestore.DocumentReference> {
-        return this.collection.add(item); //use this return value's id property to update or remove it from the database
+    persistState(state: any) {
+        localStorage.setItem('state', JSON.stringify(Object.values(state)));
     }
 
-    async update(item: any): Promise<void> {
-        return (await this.collection.doc(item.id)).update(item);
+    async getSnapshot(): Promise<TodoItem[]> {
+        const snapshot = await this.collection.once('value');
+        return Object.values(snapshot.val());
     }
 
-    async delete(item: any): Promise<void> {
-        return (await this.collection.doc(item.id)).delete();
+    add(item: TodoItem) {
+        this.collection.child(item.id).set(item);
+    }
+
+    async update(item: TodoItem): Promise<void> {
+        this.collection.child(item.id).update(item);
+    }
+
+    async delete(id: string): Promise<void> {
+        this.collection.child(id).remove();
     }
 }
