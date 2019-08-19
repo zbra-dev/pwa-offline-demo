@@ -1,5 +1,5 @@
 import Firebase from 'firebase';
-import { firebaseConfig } from './firebase.config';
+import { firebaseConfig } from './security/firebase.config';
 import { TodoItem } from './models';
 
 export default class ItemsRepository {
